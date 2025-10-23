@@ -1,0 +1,69 @@
+.logindiv{
+    width: 300px;
+    margin: auto;
+    border: 1px solid black;
+    padding: 20px;
+    text-align: center;
+    margin-top: 100px;
+    box-shadow: 2px 2px 10px grey;
+    border-radius: 10px;
+}
+.input-field{
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid grey;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+button{
+    width: 95%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff9800;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.error-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.error-card {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.error-card h3 {
+  color: #c0392b;
+  margin-bottom: 10px;
+}
+
+.error-card button {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.error-card button:hover {
+  background: #e74c3c;
+}
