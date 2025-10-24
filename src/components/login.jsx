@@ -16,9 +16,28 @@ export default function Login() {
       setpassword(e.target.value);
     }
   };
+  const validform=()=>{
+        if (!email || !password) {
+        setError("Both fields are required.");
+        return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+        setError("Please enter a valid email address.");
+        return false;
+        }
+        if(password.length<6){
+        setError("Password must be at least 6 characters long.");
+        return false;
+        }
+        return true;
+  }
 
+    
+  
   const handlesubmit = (e) => {
     e.preventDefault();
+    if(!validform()) return;
     let getdata = JSON.parse(localStorage.getItem("user")) || [];
     const user = getdata.find(
       (item) => item.email === email && item.password === password
