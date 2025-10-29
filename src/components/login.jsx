@@ -1,13 +1,13 @@
 import './login.css'
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-
+import  {Global}  from './global';
 export default function Login() {
   const [email, setemail] = useState("");
   const [password, setpassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  
   const handleinputChange = (e) => {
     if (e.target.name === "email") {
       setemail(e.target.value);
@@ -44,6 +44,7 @@ export default function Login() {
     );
 
     if (user) {
+        Global.currentUser=user;
       navigate("/home");
     } else {
       setError("Invalid credentials. Please try again.");

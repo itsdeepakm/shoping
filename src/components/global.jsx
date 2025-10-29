@@ -1,3 +1,3 @@
 export const Global = {
-  currentUser: null
+  currentUser: ""
 };
