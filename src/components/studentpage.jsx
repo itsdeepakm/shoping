@@ -18,6 +18,8 @@ export default function Studentpage() {
   const addtocart=(book)=>{
     Global.cart.push(book);
     localStorage.setItem("cart",JSON.stringify(Global.cart));
+    Global.sum+=parseFloat(book.price);
+    console.log(Global.sum);
     console.log(Global.cart);
   }
 

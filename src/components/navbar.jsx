@@ -9,6 +9,9 @@ export default function Navbar() {
     Global.currentUser=null;
     window.location.href="/login";
   }
+  const handlecart=()=>{
+    window.location.href="/cart";
+  }
   return (
     <>
       <nav className="navbar">
@@ -18,8 +21,8 @@ export default function Navbar() {
         </div>
 
         <div className="nav-right">
-            <div className="welcome">Welcome,{Global.currentUser.username}</div>
-            <div><button><img src={Cart} className="logo"></img>Cart</button></div>
+            <div className="welcome">Welcome,{Global.username}</div>
+            <div><button><img src={Cart} className="logo" onClick={handlecart}></img>Cart</button></div>
             <div className="logout"><button onClick={handlelogout}><img src={Logout}></img>Logout</button></div>
         </div>
       </nav>
