@@ -1,27 +1,28 @@
-import './login.css'
+import './login.css';
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Global } from './global';
 
 export default function Login() {
-  const [email, setemail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setpassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleinputChange = (e) => {
-    if (e.target.name === "email") setemail(e.target.value);
-    if (e.target.name === "password") setpassword(e.target.value);
+    const { name, value } = e.target;
+    if (name === "username") setusername(value);
+    if (name === "password") setpassword(value);
   };
 
   const validform = () => {
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Both fields are required.");
       return false;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
+    const usernameRegex = /^[a-zA-Z0-9._@-]+$/;
+    if (!usernameRegex.test(username)) {
+      setError("Please enter a valid username.");
       return false;
     }
     if (password.length < 6) {
@@ -36,24 +37,19 @@ export default function Login() {
     if (!validform()) return;
 
     const storedUsers = JSON.parse(localStorage.getItem("user")) || [];
-    const usersArray = Array.isArray(storedUsers) ? storedUsers : [storedUsers];
-
-    const user = usersArray.find(
-      (item) =>
-        Array.isArray(item.emails)
-          ? item.emails.some((em) => em.toLowerCase() === email.toLowerCase())
-          : item.email?.toLowerCase() === email.toLowerCase()
+    const user = storedUsers.find(
+      (u) => u.username === username && u.password === password
     );
-
-    if (user && user.password === password) {
+   console.log(user);
+    if (user) {
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
       Global.currentUser = user;
       Global.role = user.role;
-      Global.username=user.name+"_"+Math.floor(Math.random()*1000);
-      console.log(Global.username);
+      Global.username = user.username;
       if (user.role === "admin") navigate("/home");
       else navigate("/studentpage");
     } else {
-      setError("Invalid credentials. Please try again.");
+      setError("Invalid username or password. Please try again.");
     }
   };
 
@@ -64,9 +60,10 @@ export default function Login() {
           <h1>Login</h1>
           <input
             type="text"
-            name="email"
-            placeholder="Email"
+            name="username"
+            placeholder="Username"
             className="input-field"
+            value={username}
             onChange={handleinputChange}
           />
           <input
@@ -74,6 +71,7 @@ export default function Login() {
             name="password"
             placeholder="Password"
             className="input-field"
+            value={password}
             onChange={handleinputChange}
           />
           <button type="submit">Login</button>

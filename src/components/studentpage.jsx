@@ -22,10 +22,14 @@ export default function Studentpage() {
     console.log(Global.sum);
     console.log(Global.cart);
   }
+  function showprofile(){
+    window.location.href="/studentprofile";
+  }
 
   return (
     <>
       <Navbar />
+      <button onClick={showprofile}>show my profile</button>
       <div className="search-container">
         <input
           className="input-field"

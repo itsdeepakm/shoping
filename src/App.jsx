@@ -9,6 +9,7 @@ import Studentpage from './components/studentpage'
 import ShopingCart from './components/shopingcart'
 import Homepage from './components/homepage'
 import Profile from './components/profile'
+import Studentprofile from './components/studentprofile'
 function App() {
   
 
@@ -24,6 +25,7 @@ function App() {
       <Route path="/cart" element={<ShopingCart/>}/>
       <Route path="/homepage" element={<Homepage/>}/>
       <Route path="/profile" element={<Profile/>}/>
+      <Route path="/studentprofile" element={<Studentprofile/>}/>
 
 </Routes>
     </>
