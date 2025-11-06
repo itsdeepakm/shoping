@@ -5,6 +5,7 @@ import "./studentprofile.css";
 export default function Studentprofile() {
   const [user, setUser] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [showpopup,setshowpopup]=useState(false);
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -59,7 +60,10 @@ export default function Studentprofile() {
   };
 
   const handleSave = () => {
+    setshowpopup(true);
     localStorage.setItem("loggedInUser", JSON.stringify(user));
+        setTimeout(() => setshowpopup(false), 7000);
+
   };
   const handlehomepage=()=>{
     window.location.href="/studentpage";
@@ -171,6 +175,7 @@ export default function Studentprofile() {
 
         {success && <p style={{ color: "green" }}>Profile loaded successfully!</p>}
       </div>
+      {showpopup && <div className="success-card">Profile saved successfully!</div>}
     </>
   );
 }
