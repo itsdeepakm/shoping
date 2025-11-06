@@ -55,6 +55,7 @@ export default function Profile() {
   return (
     <div>
       <Navbar />
+      <button onClick={() => window.location.href = "/home"}>Go to Home Page</button>
       <div className="profile-container">
         <h1>Profile Page</h1>
         <h2>Registered Users</h2>
