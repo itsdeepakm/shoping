@@ -1,4 +1,4 @@
-export const Global = {
+export  const Global = {
   currentUser: "",
   role: "",
   cart: localStorage.getItem("cart")

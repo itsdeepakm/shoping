@@ -1,14 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import "./register.css";
-
+import { Global } from "./global";
 export default function Register() {
-  const navigate = useNavigate();
+
 
   const initialDetails = {
     name: "",
-    phones: [""],
-    emails: [""],
+    phone: "",
+    email: "",
     password: "",
     role: "",
   };
@@ -16,68 +16,48 @@ export default function Register() {
   const [data, setData] = useState(initialDetails);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [generatedUsername, setGeneratedUsername] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
   };
 
-  const handlePhoneChange = (index, value) => {
-    const updatedPhones = [...data.phones];
-    updatedPhones[index] = value;
-    setData({ ...data, phones: updatedPhones });
-  };
-
-  const addPhone = () => {
-    if (data.phones[data.phones.length - 1].trim() !== "") {
-      setData({ ...data, phones: [...data.phones, ""] });
-    }
-  };
-
-  const removePhone = (index) => {
-    if (data.phones.length === 1) return;
-    const updatedPhones = data.phones.filter((_, i) => i !== index);
-    setData({ ...data, phones: updatedPhones });
-  };
-
-  const handleEmailChange = (index, value) => {
-    const updatedEmails = [...data.emails];
-    updatedEmails[index] = value;
-    setData({ ...data, emails: updatedEmails });
-  };
-
-  const addEmail = () => {
-    if (data.emails[data.emails.length - 1].trim() !== "") {
-      setData({ ...data, emails: [...data.emails, ""] });
-    }
-  };
-
-  const removeEmail = (index) => {
-    if (data.emails.length === 1) return;
-    const updatedEmails = data.emails.filter((_, i) => i !== index);
-    setData({ ...data, emails: updatedEmails });
-  };
-
   const validate = () => {
+    const user=JSON.parse( localStorage.getItem("user") ||"[]");
     const newErrors = {};
     const namePattern = /^[A-Za-z\s]+$/;
     if (!data.name.trim()) newErrors.name = "Name is required.";
-    else if (!namePattern.test(data.name)) newErrors.name = "Name must contain only alphabets.";
-    else if (data.name.length < 3) newErrors.name = "Name must be at least 3 characters.";
+    else if (!namePattern.test(data.name))
+      newErrors.name = "Name must contain only alphabets.";
+    else if (data.name.length < 3)
+      newErrors.name = "Name must be at least 3 characters.";
+    
     const phonePattern = /^[0-9]{10}$/;
-    data.phones.forEach((phone, index) => {
-      if (!phone.trim()) newErrors[`phone${index}`] = "Phone number is required.";
-      else if (!phonePattern.test(phone)) newErrors[`phone${index}`] = "Enter a valid 10-digit phone number.";
-    });
+    if (!data.phone.trim()) newErrors.phone = "Phone number is required.";
+    if(user.some((u)=>u.phone===data.phone)){
+      newErrors.phone = "Phone number already registered.";
+    }
+    else if (!phonePattern.test(data.phone))
+      newErrors.phone = "Enter a valid 10-digit phone number.";
+    
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    data.emails.forEach((email, index) => {
-      if (!email.trim()) newErrors[`email${index}`] = "Email is required.";
-      else if (!emailPattern.test(email)) newErrors[`email${index}`] = "Enter a valid email address.";
-    });
-    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_-])[A-Za-z\d@$!%*#?&^_-]{6,}$/;
+    if (!data.email.trim()) newErrors.email = "Email is required.";
+    if(user.some((u)=>u.email===data.email)){
+      newErrors.email = "Email already registered.";
+    }
+    else if (!emailPattern.test(data.email))
+      newErrors.email = "Enter a valid email address.";
+
+    const passwordPattern =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_-])[A-Za-z\d@$!%*#?&^_-]{6,}$/;
     if (!data.password.trim()) newErrors.password = "Password is required.";
-    else if (!passwordPattern.test(data.password)) newErrors.password = "Password must include letters, numbers, and a special character.";
+    else if (!passwordPattern.test(data.password))
+      newErrors.password =
+        "Password must include letters, numbers, and a special character.";
+
     if (!data.role.trim()) newErrors.role = "Please select a role.";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -85,16 +65,24 @@ export default function Register() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const existingUsers = JSON.parse(localStorage.getItem("user") || "[]");
-    const updatedUsers = [...existingUsers, data];
+      const existingUsers = JSON.parse(localStorage.getItem("user") || "[]");
+      let nextid=existingUsers.length+1;
+    const username =
+      data.role === "admin"
+        ? `${data.name}_admin${nextid}`
+        : `${data.name}_student${nextid}`;
+
+    const userData = { ...data, username };
+
+    const updatedUsers = [...existingUsers, userData];
     localStorage.setItem("user", JSON.stringify(updatedUsers));
+   Global.username=username;
+    setGeneratedUsername(username);
     setData(initialDetails);
     setErrors({});
     setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      navigate("/login");
-    }, 2000);
+   
+    
   };
 
   return (
@@ -110,44 +98,27 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.name && <p className="error">{errors.name}</p>}
-        <label>Phone Numbers:</label>
-        {data.phones.map((phone, index) => (
-          <div key={index} className="multi-input">
-            <input
-              type="text"
-              placeholder={`Phone Number ${index + 1}`}
-              className="input-field"
-              value={phone}
-              onChange={(e) => handlePhoneChange(index, e.target.value)}
-            />
-            {data.phones.length > 1 && (
-              <button type="button" className="remove-btn" onClick={() => removePhone(index)}>
-                remove
-              </button>
-            )}
-            {errors[`phone${index}`] && <p className="error">{errors[`phone${index}`]}</p>}
-          </div>
-        ))}
-        <button type="button" className="add-btn" onClick={addPhone}>Add Phone</button>
-        <label>Emails:</label>
-        {data.emails.map((email, index) => (
-          <div key={index} className="multi-input">
-            <input
-              type="email"
-              placeholder={`Email ${index + 1}`}
-              className="input-field"
-              value={email}
-              onChange={(e) => handleEmailChange(index, e.target.value)}
-            />
-            {data.emails.length > 1 && (
-              <button type="button" className="remove-btn" onClick={() => removeEmail(index)}>
-                remove
-              </button>
-            )}
-            {errors[`email${index}`] && <p className="error">{errors[`email${index}`]}</p>}
-          </div>
-        ))}
-        <button type="button" className="add-btn" onClick={addEmail}>Add Email</button>
+
+        <input
+          type="text"
+          name="phone"
+          placeholder="Phone Number"
+          className="input-field"
+          value={data.phone}
+          onChange={handleInputChange}
+        />
+        {errors.phone && <p className="error">{errors.phone}</p>}
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          className="input-field"
+          value={data.email}
+          onChange={handleInputChange}
+        />
+        {errors.email && <p className="error">{errors.email}</p>}
+
         <input
           type="password"
           name="password"
@@ -157,23 +128,37 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.password && <p className="error">{errors.password}</p>}
-        <select className="input-field" onChange={handleInputChange} name="role" value={data.role}>
+
+        <select
+          className="input-field"
+          onChange={handleInputChange}
+          name="role"
+          value={data.role}
+        >
           <option value="">Select Role</option>
           <option value="user">Student</option>
           <option value="admin">Admin</option>
         </select>
         {errors.role && <p className="error">{errors.role}</p>}
-        <button type="submit" className="register-btn">Register</button>
+
+        <button type="submit" className="register-btn">
+          Register
+        </button>
         <Link to="/login">
-          <button type="button" className="login-btn">Login</button>
+          <button type="button" className="login-btn">
+            Login
+          </button>
         </Link>
       </form>
+
       {success && (
         <div className="success-card">
-          <h3>Registration Successful</h3>
-          <p>Redirecting to login page...</p>
+          <h3>Registration Successful!</h3>
+          <p>Your username is: <strong>{generatedUsername}</strong></p>
+          <p>Please remember this for login.</p>
         </div>
       )}
     </div>
   );
 }
+
