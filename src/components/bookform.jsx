@@ -1,5 +1,5 @@
 import "./bookform.css";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 
 export default function Bookform() {
   const [book, setBook] = useState({
@@ -8,18 +8,47 @@ export default function Bookform() {
     price: "",
     genre: "",
   });
-
+  const [books, setBooks] = useState([]);
+  const [edit,setedit]=useState(null);
+  
+  useEffect(()=>{
+    const storedBooks = JSON.parse(localStorage.getItem("books")) || [];
+    setBooks(storedBooks);
+  },[]);
   const handleChange = (e) => {
     setBook({ ...book, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Book Added:", book);
-    localStorage.setItem("books", JSON.stringify(book));
+  e.preventDefault();
+  let updatedBooks = [...books];
+  
+  if (edit !== null) {
+    updatedBooks[edit] = book;
+    setedit(null);
+  } else {
+    updatedBooks.push(book);
+  }
 
-    setBook({ title: "", author: "", price: "", genre: "" });
-  };
+  setBooks(updatedBooks);
+  localStorage.setItem("books", JSON.stringify(updatedBooks));
+  setBook({ title: "", author: "", price: "", genre: "" });
+};
+
+
+
+  function deleteBook(index){
+    const updatedBooks = books.filter((j, i) => i !== index);
+    setBooks(updatedBooks);
+    localStorage.setItem("books", JSON.stringify(updatedBooks));
+  }
+  function editBook(index){
+    const bookToEdit = books[index];
+    setBook(bookToEdit);
+    setedit(index);
+
+  }
+    
 
   return (
     <>
@@ -80,6 +109,16 @@ export default function Bookform() {
       </form>
 
     </div>
+    {books.map((bk, index) => (
+      <div key={index} className="book-display">
+        <h3>{bk.title}</h3>
+        <p>Author: {bk.author}</p>
+        <p>Price: ${bk.price}</p>
+        <p>Genre: {bk.genre}</p>
+        <button onClick={()=>deleteBook(index)}>delete</button>
+        <button onClick={()=>editBook(index)}>edit</button>
+      </div>
+    ))}
     </>
   );
 }
