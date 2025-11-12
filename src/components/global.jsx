@@ -5,5 +5,7 @@ export  const Global = {
     ? JSON.parse(localStorage.getItem("cart"))
     : [],
    sum:0,
-   username:""
+   username:localStorage.getItem("loggedInUser")
+    ? JSON.parse(localStorage.getItem("loggedInUser")).username
+    : "",
 };

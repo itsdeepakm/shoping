@@ -12,6 +12,9 @@ export default function Navbar() {
   const handlecart=()=>{
     window.location.href="/cart";
   }
+  let username=localStorage.getItem("loggedInUser")
+  ? JSON.parse(localStorage.getItem("loggedInUser")).name
+  : "";
   return (
     <>
       <nav className="navbar">
@@ -21,7 +24,7 @@ export default function Navbar() {
         </div>
 
         <div className="nav-right">
-            <div className="welcome">Welcome,{Global.username}</div>
+            <div className="welcome">Welcome,{username}</div>
             <div><button><img src={Cart} className="logo" onClick={handlecart}></img>Cart</button></div>
             <div className="logout"><button onClick={handlelogout}><img src={Logout}></img>Logout</button></div>
         </div>

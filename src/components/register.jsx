@@ -17,6 +17,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -62,27 +63,31 @@ export default function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
+    setServerError("");
     if (!validate()) return;
-      const existingUsers = JSON.parse(localStorage.getItem("user") || "[]");
-      let nextid=existingUsers.length+1;
-    const username =
-      data.role === "admin"
-        ? `${data.name}_admin${nextid}`
-        : `${data.name}_student${nextid}`;
-
-    const userData = { ...data, username };
-
-    const updatedUsers = [...existingUsers, userData];
-    localStorage.setItem("user", JSON.stringify(updatedUsers));
-   Global.username=username;
-    setGeneratedUsername(username);
+    try{
+      const response=await fetch("http://localhost:3000/api/users",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+      },
+        body:JSON.stringify(data),
+    });
+    const result=await response.json();
+    if(!response.ok){
+      throw new Error(result.message ||"Registration failed");
+      
+    }
+    setGeneratedUsername(result.user.username);
+    Global.username=result.user.username;
     setData(initialDetails);
     setErrors({});
     setSuccess(true);
-   
-    
+  }catch(error){
+    setServerError(error.message);
+  }  
   };
 
   return (
@@ -150,7 +155,7 @@ export default function Register() {
           </button>
         </Link>
       </form>
-
+  {serverError && <p className="error">{serverError}</p>}
       {success && (
         <div className="success-card">
           <h3>Registration Successful!</h3>
@@ -161,4 +166,3 @@ export default function Register() {
     </div>
   );
 }
-
