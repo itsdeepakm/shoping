@@ -32,15 +32,24 @@ export default function Login() {
     return true;
   };
 
-  const handlesubmit = (e) => {
+  const handlesubmit = async(e) => {
     e.preventDefault();
     if (!validform()) return;
 
-    const storedUsers = JSON.parse(localStorage.getItem("user")) || [];
-    const user = storedUsers.find(
-      (u) => u.username === username && u.password === password
-    );
-   console.log(user);
+    try{
+      const response=await fetch("http://localhost:3000/api/login",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({username,password})
+      });
+      
+    const data=await response.json();
+    if(!response.ok){
+      throw new Error(data.message ||"Login failed");
+    }
+    const user=data.user;
     if (user) {
         localStorage.setItem("loggedInUser", JSON.stringify(user));
       Global.currentUser = user;
@@ -51,7 +60,10 @@ export default function Login() {
     } else {
       setError("Invalid username or password. Please try again.");
     }
-  };
+  }catch(error){
+    setError(error.message);
+  }
+};
 
   return (
     <>
