@@ -155,7 +155,7 @@ export default function Register() {
           onChange={handleInputChange}
         >
           <option value="">Select Role</option>
-          <option value="user">Student</option>
+          <option value="Student">Student</option>
           <option value="admin">Admin</option>
         </select>
         {errors.role && <p className="error">{errors.role}</p>}
