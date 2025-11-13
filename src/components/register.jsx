@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./register.css";
 import { Global } from "./global";
+
 export default function Register() {
-
-
   const initialDetails = {
     name: "",
     phone: "",
@@ -18,76 +17,89 @@ export default function Register() {
   const [success, setSuccess] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState("");
   const [serverError, setServerError] = useState("");
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("user") || "[]");
+    setUsers(stored);
+  }, []);
+
+  const validateField = (name, value) => {
+    let message = "";
+    switch (name) {
+      case "name":
+        if (!value.trim()) message = "Name is required.";
+        else if (!/^[A-Za-z\s]+$/.test(value))
+          message = "Name must contain only alphabets.";
+        else if (value.length < 3)
+          message = "Name must be at least 3 characters.";
+        break;
+      case "phone":
+        if (!value.trim()) message = "Phone number is required.";
+        else if (users.some((u) => u.phone === value))
+          message = "Phone number already registered.";
+        else if (!/^[0-9]{10}$/.test(value))
+          message = "Enter a valid 10-digit phone number.";
+        break;
+      case "email":
+        if (!value.trim()) message = "Email is required.";
+        else if (users.some((u) => u.email === value))
+          message = "Email already registered.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          message = "Enter a valid email address.";
+        break;
+      case "password":
+        if (!value.trim()) message = "Password is required.";
+        else if (
+          !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_-])[A-Za-z\d@$!%*#?&^_-]{6,}$/.test(
+            value
+          )
+        )
+          message =
+            "Password must include letters, numbers, and a special character.";
+        break;
+      case "role":
+        if (!value.trim()) message = "Please select a role.";
+        break;
+      default:
+        break;
+    }
+    setErrors((prev) => ({ ...prev, [name]: message }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setData({ ...data, [name]: value });
+    setData((prev) => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
 
-  const validate = () => {
-    const user=JSON.parse( localStorage.getItem("user") ||"[]");
-    const newErrors = {};
-    const namePattern = /^[A-Za-z\s]+$/;
-    if (!data.name.trim()) newErrors.name = "Name is required.";
-    else if (!namePattern.test(data.name))
-      newErrors.name = "Name must contain only alphabets.";
-    else if (data.name.length < 3)
-      newErrors.name = "Name must be at least 3 characters.";
-    
-    const phonePattern = /^[0-9]{10}$/;
-    if (!data.phone.trim()) newErrors.phone = "Phone number is required.";
-    if(user.some((u)=>u.phone===data.phone)){
-      newErrors.phone = "Phone number already registered.";
-    }
-    else if (!phonePattern.test(data.phone))
-      newErrors.phone = "Enter a valid 10-digit phone number.";
-    
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!data.email.trim()) newErrors.email = "Email is required.";
-    if(user.some((u)=>u.email===data.email)){
-      newErrors.email = "Email already registered.";
-    }
-    else if (!emailPattern.test(data.email))
-      newErrors.email = "Enter a valid email address.";
-
-    const passwordPattern =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_-])[A-Za-z\d@$!%*#?&^_-]{6,}$/;
-    if (!data.password.trim()) newErrors.password = "Password is required.";
-    else if (!passwordPattern.test(data.password))
-      newErrors.password =
-        "Password must include letters, numbers, and a special character.";
-
-    if (!data.role.trim()) newErrors.role = "Please select a role.";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validateAll = () => {
+    Object.keys(data).forEach((field) => validateField(field, data[field]));
+    return Object.values(errors).every((err) => err === "");
   };
 
-  const handleSubmit =async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
-    if (!validate()) return;
-    try{
-      const response=await fetch("http://localhost:3000/api/users",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-      },
-        body:JSON.stringify(data),
-    });
-    const result=await response.json();
-    if(!response.ok){
-      throw new Error(result.message ||"Registration failed");
-      
+    if (!validateAll()) return;
+    try {
+      const response = await fetch("http://localhost:3000/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Registration failed");
+      setGeneratedUsername(result.user.username);
+      Global.username = result.user.username;
+      setData(initialDetails);
+      setErrors({});
+      setSuccess(true);
+    } catch (error) {
+      setServerError(error.message);
     }
-    setGeneratedUsername(result.user.username);
-    Global.username=result.user.username;
-    setData(initialDetails);
-    setErrors({});
-    setSuccess(true);
-  }catch(error){
-    setServerError(error.message);
-  }  
   };
 
   return (
@@ -136,9 +148,9 @@ export default function Register() {
 
         <select
           className="input-field"
-          onChange={handleInputChange}
           name="role"
           value={data.role}
+          onChange={handleInputChange}
         >
           <option value="">Select Role</option>
           <option value="user">Student</option>
@@ -155,11 +167,15 @@ export default function Register() {
           </button>
         </Link>
       </form>
-  {serverError && <p className="error">{serverError}</p>}
+
+      {serverError && <p className="error">{serverError}</p>}
+
       {success && (
         <div className="success-card">
           <h3>Registration Successful!</h3>
-          <p>Your username is: <strong>{generatedUsername}</strong></p>
+          <p>
+            Your username is: <strong>{generatedUsername}</strong>
+          </p>
           <p>Please remember this for login.</p>
         </div>
       )}
