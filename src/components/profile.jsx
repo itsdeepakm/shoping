@@ -5,17 +5,37 @@ import { useState, useEffect } from "react";
 export default function Profile() {
   const [users, setUsers] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
-  const [editData, setEditData] = useState({ name: "", role: "", phones: [""], emails: [""] });
+  const [editData, setEditData] = useState({
+    name: "",
+    role: "",
+    phones: [""],
+    emails: [""],
+    username: ""
+  });
 
   useEffect(() => {
-    const storedUsers = JSON.parse(localStorage.getItem("user")) || [];
-    setUsers(storedUsers);
+    fetch("http://localhost:3000/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Error fetching users:", err));
   }, []);
 
-  const handleDeleteUser = (index) => {
-    const updatedUsers = users.filter((j, i) => i !== index);
-    setUsers(updatedUsers);
-    localStorage.setItem("user", JSON.stringify(updatedUsers));
+  const handleDeleteUser = async (username) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/users/${username}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        setUsers(users.filter((user) => user.username !== username));
+      } else {
+        alert(data.message || "Failed to delete user");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
   };
 
   const handleEditClick = (index) => {
@@ -44,18 +64,35 @@ export default function Profile() {
     setEditData({ ...editData, [field]: updated });
   };
 
-  const handleSaveEdit = () => {
-    const updatedUsers = [...users];
-    updatedUsers[editingIndex] = editData;
-    setUsers(updatedUsers);
-    localStorage.setItem("user", JSON.stringify(updatedUsers));
-    setEditingIndex(null);
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/users/${editData.username}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editData),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        alert("User updated successfully!");
+        const updatedUsers = [...users];
+        updatedUsers[editingIndex] = data.user;
+        setUsers(updatedUsers);
+        setEditingIndex(null);
+      } else {
+        alert(data.message || "Update failed");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
   };
 
   return (
     <div>
       <Navbar />
-      <button onClick={() => window.location.href = "/home"}>Go to Home Page</button>
+      <button onClick={() => (window.location.href = "/home")}>Go to Home Page</button>
       <div className="profile-container">
         <h1>Profile Page</h1>
         <h2>Registered Users</h2>
@@ -94,11 +131,18 @@ export default function Profile() {
                             className="input-field"
                           />
                           {editData.phones.length > 1 && (
-                            <button onClick={() => handleRemoveField("phones", i)} className="remove-btn">remove</button>
+                            <button
+                              onClick={() => handleRemoveField("phones", i)}
+                              className="remove-btn"
+                            >
+                              remove
+                            </button>
                           )}
                         </div>
                       ))}
-                      <button onClick={() => handleAddField("phones")} className="add-btn">Add Phone</button>
+                      <button onClick={() => handleAddField("phones")} className="add-btn">
+                        Add Phone
+                      </button>
                     </div>
                     <div className="edit-section">
                       <strong>Emails:</strong>
@@ -111,15 +155,24 @@ export default function Profile() {
                             className="input-field"
                           />
                           {editData.emails.length > 1 && (
-                            <button onClick={() => handleRemoveField("emails", i)} className="remove-btn">remove</button>
+                            <button
+                              onClick={() => handleRemoveField("emails", i)}
+                              className="remove-btn"
+                            >
+                              remove
+                            </button>
                           )}
                         </div>
                       ))}
-                      <button onClick={() => handleAddField("emails")} className="add-btn">Add Email</button>
+                      <button onClick={() => handleAddField("emails")} className="add-btn">
+                        Add Email
+                      </button>
                     </div>
                     <div className="edit-actions">
                       <button onClick={handleSaveEdit} className="save-btn">Save</button>
-                      <button onClick={() => setEditingIndex(null)} className="cancel-btn"> Cancel</button>
+                      <button onClick={() => setEditingIndex(null)} className="cancel-btn">
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -135,8 +188,15 @@ export default function Profile() {
                       <ul>{user.emails?.map((e, i) => <li key={i}>{e}</li>)}</ul>
                     </div>
                     <div className="user-actions">
-                      <button onClick={() => handleEditClick(index)} className="edit-btn"> Edit</button>
-                      <button onClick={() => handleDeleteUser(index)} className="delete-btn"> Delete</button>
+                      <button onClick={() => handleEditClick(index)} className="edit-btn">
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.username)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </>
                 )}
