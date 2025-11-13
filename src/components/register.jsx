@@ -66,7 +66,9 @@ export default function Register() {
     }
     setErrors((prev) => ({ ...prev, [name]: message }));
   };
-
+  const handlelogin = () => {
+    window.location.href = "/login";
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
@@ -161,24 +163,26 @@ export default function Register() {
         <button type="submit" className="register-btn">
           Register
         </button>
-        <Link to="/login">
+        {/* <Link to="/login">
           <button type="button" className="login-btn">
             Login
           </button>
-        </Link>
-      </form>
-
-      {serverError && <p className="error">{serverError}</p>}
-
-      {success && (
+        </Link> */}
+         {success && (
         <div className="success-card">
           <h3>Registration Successful!</h3>
           <p>
             Your username is: <strong>{generatedUsername}</strong>
           </p>
           <p>Please remember this for login.</p>
+          <button onClick={handlelogin}> Login </button>
         </div>
       )}
+      </form>
+
+      {serverError && <p className="error">{serverError}</p>}
+
+     
     </div>
   );
 }
