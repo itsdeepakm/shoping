@@ -8,7 +8,8 @@ export default function ShopingCart() {
     Global.cart.length ? Global.cart : JSON.parse(localStorage.getItem("cart")) || []
   );
   const [total, setTotal] = useState(0);
-
+  const [confirm,setconfirm]=useState(false);
+  const [currentitem,setcurrentitem]=useState(null);
   useEffect(() => {
     const sum = cart.reduce((acc, item) => acc + parseFloat(item.price), 0);
     setTotal(sum);
@@ -16,12 +17,16 @@ export default function ShopingCart() {
   }, [cart]);
 
   const removeFromCart = (index) => {
+    setconfirm(true);
+    setcurrentitem(index);
+    
+  };
+  const removeItemConfirmation=(index)=>{
     const updatedCart = cart.filter((_, i) => i !== index);
     setCart(updatedCart);
     Global.cart = updatedCart;
     localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
-
+  }
   return (
     <>
       <Navbar />
@@ -39,6 +44,16 @@ export default function ShopingCart() {
             <button>Buy Now</button>
           </div>
         ))
+      )}
+      {confirm && (
+        <div className="confirmation-popup">
+          <div className="confirmation-card"> 
+            <h3>Item Removed</h3>
+            <p>are you sure want to remove from cart.</p>
+            <button onClick={() => {removeItemConfirmation(currentitem); setconfirm(false);}}>Yes</button>
+            <button onClick={() => setconfirm(false)}>Close</button>
+          </div>
+        </div>
       )}
       <h3>Total Price: ${total.toFixed(2)}</h3>
     </>
