@@ -10,8 +10,10 @@ export default function Profile() {
     role: "",
     phones: [""],
     emails: [""],
-    username: ""
+    username: "",
   });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     fetch("http://localhost:3000/users")
@@ -20,22 +22,35 @@ export default function Profile() {
       .catch((err) => console.error("Error fetching users:", err));
   }, []);
 
-  const handleDeleteUser = async (username) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+  const handleDeleteUser = (username) => {
+    setConfirmDelete(true);
+    setCurrentUser(username);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!currentUser) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/users/${username}`, {
+      const res = await fetch(`http://localhost:3000/api/users/${currentUser}`, {
         method: "DELETE",
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
-        setUsers(users.filter((user) => user.username !== username));
+        alert(data.message || "User deleted successfully!");
+        setUsers(users.filter((u) => u.username !== currentUser));
       } else {
         alert(data.message || "Failed to delete user");
       }
     } catch (error) {
       console.error("Error deleting user:", error);
+    } finally {
+      setConfirmDelete(false);
+      setCurrentUser(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setConfirmDelete(false);
+    setCurrentUser(null);
   };
 
   const handleEditClick = (index) => {
@@ -92,10 +107,14 @@ export default function Profile() {
   return (
     <div>
       <Navbar />
-      <button onClick={() => (window.location.href = "/home")}>Go to Home Page</button>
+      <button onClick={() => (window.location.href = "/home")}>
+        Go to Home Page
+      </button>
+
       <div className="profile-container">
         <h1>Profile Page</h1>
         <h2>Registered Users</h2>
+
         <div className="user-list">
           {users.length === 0 ? (
             <p>No registered users found.</p>
@@ -117,9 +136,10 @@ export default function Profile() {
                       className="input-field"
                     >
                       <option value="">Select Role</option>
-                      <option value="user">Student</option>
+                      <option value="Student">Student</option>
                       <option value="admin">Admin</option>
                     </select>
+
                     <div className="edit-section">
                       <strong>Phone Numbers:</strong>
                       {editData.phones.map((phone, i) => (
@@ -127,7 +147,9 @@ export default function Profile() {
                           <input
                             type="text"
                             value={phone}
-                            onChange={(e) => handleEditChange(e, "phones", i)}
+                            onChange={(e) =>
+                              handleEditChange(e, "phones", i)
+                            }
                             className="input-field"
                           />
                           {editData.phones.length > 1 && (
@@ -140,10 +162,14 @@ export default function Profile() {
                           )}
                         </div>
                       ))}
-                      <button onClick={() => handleAddField("phones")} className="add-btn">
+                      <button
+                        onClick={() => handleAddField("phones")}
+                        className="add-btn"
+                      >
                         Add Phone
                       </button>
                     </div>
+
                     <div className="edit-section">
                       <strong>Emails:</strong>
                       {editData.emails.map((email, i) => (
@@ -151,7 +177,9 @@ export default function Profile() {
                           <input
                             type="email"
                             value={email}
-                            onChange={(e) => handleEditChange(e, "emails", i)}
+                            onChange={(e) =>
+                              handleEditChange(e, "emails", i)
+                            }
                             className="input-field"
                           />
                           {editData.emails.length > 1 && (
@@ -164,13 +192,22 @@ export default function Profile() {
                           )}
                         </div>
                       ))}
-                      <button onClick={() => handleAddField("emails")} className="add-btn">
+                      <button
+                        onClick={() => handleAddField("emails")}
+                        className="add-btn"
+                      >
                         Add Email
                       </button>
                     </div>
+
                     <div className="edit-actions">
-                      <button onClick={handleSaveEdit} className="save-btn">Save</button>
-                      <button onClick={() => setEditingIndex(null)} className="cancel-btn">
+                      <button onClick={handleSaveEdit} className="save-btn">
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingIndex(null)}
+                        className="cancel-btn"
+                      >
                         Cancel
                       </button>
                     </div>
@@ -178,17 +215,30 @@ export default function Profile() {
                 ) : (
                   <>
                     <h3>{user.name}</h3>
-                    <p><strong>Role:</strong> {user.role}</p>
+                    <p>
+                      <strong>Role:</strong> {user.role}
+                    </p>
                     <div className="info-section">
                       <strong>Phone Numbers:</strong>
-                      <ul>{user.phones?.map((p, i) => <li key={i}>{p}</li>)}</ul>
+                      <ul>
+                        {user.phones?.map((p, i) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
                     </div>
                     <div className="info-section">
                       <strong>Emails:</strong>
-                      <ul>{user.emails?.map((e, i) => <li key={i}>{e}</li>)}</ul>
+                      <ul>
+                        {user.emails?.map((e, i) => (
+                          <li key={i}>{e}</li>
+                        ))}
+                      </ul>
                     </div>
                     <div className="user-actions">
-                      <button onClick={() => handleEditClick(index)} className="edit-btn">
+                      <button
+                        onClick={() => handleEditClick(index)}
+                        className="edit-btn"
+                      >
                         Edit
                       </button>
                       <button
@@ -205,6 +255,17 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      {confirmDelete && (
+        <div className="success-card">
+          <h3>Confirm Deletion</h3>
+          <p>Are you sure you want to delete this user?</p>
+          <div>
+            <button onClick={confirmDeleteUser}>Yes</button>
+            <button onClick={cancelDelete}>No</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

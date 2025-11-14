@@ -9,12 +9,12 @@
     border-radius: 10px;
 }
 .input-field{
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid grey;
-    border-radius: 5px;
-    font-size: 1rem;
+     width: 80%;
+  padding: 8px;
+  margin: 8px 0;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
 }
 button{
     width: 95%;
