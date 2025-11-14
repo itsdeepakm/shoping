@@ -119,3 +119,29 @@
 .success-card button:hover {
   opacity: 0.9;
 }
+.search-container {
+  display: flex;
+  justify-content: center;   
+  align-items: center;      
+  gap: 10px;          
+  margin-top: 20px;
+}
+
+.search-bar {
+  width: 200px;
+  padding: 8px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-btn{
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+}
+.search-btn:hover {
+  background-color: #2c80b4;
+}

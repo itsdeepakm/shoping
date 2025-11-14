@@ -14,6 +14,7 @@ export default function Profile() {
   });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3000/users")
@@ -78,7 +79,7 @@ export default function Profile() {
     const updated = editData[field].filter((_, i) => i !== idx);
     setEditData({ ...editData, [field]: updated });
   };
-
+  
   const handleSaveEdit = async () => {
     try {
       const res = await fetch(
@@ -103,14 +104,31 @@ export default function Profile() {
       console.error("Error updating user:", error);
     }
   };
-
+  function handleSearchChange(e) {
+    setSearchTerm(e.target.value);
+  }
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())||
+    user.emails.some((email) =>
+      email.toLowerCase().includes(searchTerm.toLowerCase())
+    ) ||  
+    user.phones.some((phone) =>
+      phone.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
   return (
     <div>
       <Navbar />
+      
       <button onClick={() => (window.location.href = "/home")}>
         Go to Home Page
       </button>
-
+      <div className="search-container">
+      <input type="text" placeholder="Search users..." className="search-bar" onChange={handleSearchChange}/>
+      <button className="search-btn">Search</button>
+    </div>
       <div className="profile-container">
         <h1>Profile Page</h1>
         <h2>Registered Users</h2>
@@ -119,7 +137,7 @@ export default function Profile() {
           {users.length === 0 ? (
             <p>No registered users found.</p>
           ) : (
-            users.map((user, index) => (
+            filteredUsers.map((user, index) => (
               <div className="user-card" key={index}>
                 {editingIndex === index ? (
                   <div className="edit-card">
