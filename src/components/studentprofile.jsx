@@ -6,6 +6,7 @@ export default function Studentprofile() {
   const [user, setUser] = useState(null);
   const [success, setSuccess] = useState(false);
   const [showpopup, setshowpopup] = useState(false);
+  const [editingName, setEditingName] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async (username) => {
@@ -81,6 +82,10 @@ export default function Studentprofile() {
   };
 
   const handleEdit = (value) => {
+    if(value.trim()=== ""){
+      setEditingName(true);
+      return;
+    };
     setUser((prev) => ({ ...prev, name: value }));
   };
 
@@ -183,6 +188,15 @@ export default function Studentprofile() {
       </div>
 
       {showpopup && <div className="success-card">Profile saved successfully!</div>}
+      {editingName && (
+        <div className="error-popup">
+          <div className="error-card">  
+            <h3>Edit Failed</h3>
+            <p>Name cannot be empty. Please enter a valid name.</p>
+            <button onClick={() => setEditingName(false)}>Close</button>      
+          </div>
+        </div>
+      )}
     </>
   );
 }
