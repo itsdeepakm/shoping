@@ -16,7 +16,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState("");
-  const [serverError, setServerError] = useState("");
+  const [serverError, setServerError] = useState({});
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -34,6 +34,7 @@ export default function Register() {
         else if (value.length < 3)
           message = "Name must be at least 3 characters.";
         break;
+
       case "phone":
         if (!value.trim()) message = "Phone number is required.";
         else if (users.some((u) => u.phone === value))
@@ -41,6 +42,7 @@ export default function Register() {
         else if (!/^[0-9]{10}$/.test(value))
           message = "Enter a valid 10-digit phone number.";
         break;
+
       case "email":
         if (!value.trim()) message = "Email is required.";
         else if (users.some((u) => u.email === value))
@@ -48,6 +50,7 @@ export default function Register() {
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
           message = "Enter a valid email address.";
         break;
+
       case "password":
         if (!value.trim()) message = "Password is required.";
         else if (
@@ -58,17 +61,22 @@ export default function Register() {
           message =
             "Password must include letters, numbers, and a special character.";
         break;
+
       case "role":
         if (!value.trim()) message = "Please select a role.";
         break;
+
       default:
         break;
     }
+
     setErrors((prev) => ({ ...prev, [name]: message }));
   };
+
   const handlelogin = () => {
     window.location.href = "/login";
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
@@ -83,7 +91,9 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
+
     if (!validateAll()) return;
+
     try {
       const response = await fetch("http://localhost:3000/api/users", {
         method: "POST",
@@ -92,15 +102,26 @@ export default function Register() {
         },
         body: JSON.stringify(data),
       });
+
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Registration failed");
+
+      if (!response.ok) {
+        if (result.errors) {
+          setServerError(result.errors);
+        } else {
+          setServerError({ general: result.message });
+        }
+        return;
+      }
+
+      
       setGeneratedUsername(result.user.username);
       Global.username = result.user.username;
       setData(initialDetails);
       setErrors({});
       setSuccess(true);
     } catch (error) {
-      setServerError(error.message);
+      setServerError({ general: error.message });
     }
   };
 
@@ -108,6 +129,7 @@ export default function Register() {
     <div className="registerdiv">
       <h1>Register</h1>
       <form onSubmit={handleSubmit} className="register-form">
+        
         <input
           type="text"
           name="name"
@@ -127,6 +149,7 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.phone && <p className="error">{errors.phone}</p>}
+        {serverError.phone && <p className="error">{serverError.phone}</p>}
 
         <input
           type="email"
@@ -137,6 +160,7 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.email && <p className="error">{errors.email}</p>}
+        {serverError.email && <p className="error">{serverError.email}</p>}
 
         <input
           type="password"
@@ -163,26 +187,20 @@ export default function Register() {
         <button type="submit" className="register-btn">
           Register
         </button>
-        {/* <Link to="/login">
-          <button type="button" className="login-btn">
-            Login
-          </button>
-        </Link> */}
-         {success && (
-        <div className="success-card">
-          <h3>Registration Successful!</h3>
-          <p>
-            Your username is: <strong>{generatedUsername}</strong>
-          </p>
-          <p>Please remember this for login.</p>
-          <button onClick={handlelogin}> Login </button>
-        </div>
-      )}
+
+        {success && (
+          <div className="success-card">
+            <h3>Registration Successful!</h3>
+            <p>
+              Your username is: <strong>{generatedUsername}</strong>
+            </p>
+            <p>Please remember this for login.</p>
+            <button onClick={handlelogin}>Login</button>
+          </div>
+        )}
       </form>
 
-      {serverError && <p className="error">{serverError}</p>}
-
-     
+      {serverError.general && <p className="error">{serverError.general}</p>}
     </div>
   );
 }
