@@ -12,11 +12,13 @@ export default function Profile() {
     emails: [""],
     username: "",
   });
+  
   const [nameedit, setNameedit] = useState(false);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
 
   useEffect(() => {
     fetch("http://localhost:3000/users")
