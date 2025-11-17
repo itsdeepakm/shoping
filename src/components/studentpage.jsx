@@ -6,6 +6,8 @@ import { Global } from "./global";
 export default function Studentpage() {
   const [search, setSearch] = useState("");
   const [filteredBooks, setFilteredBooks] = useState([]);
+  const [stockMessage, setStockMessage] = useState("");
+
   const books = JSON.parse(localStorage.getItem("books")) || [];
 
   const handleSearch = () => {
@@ -15,21 +17,40 @@ export default function Studentpage() {
     );
     setFilteredBooks(filtered);
   };
-  const addtocart=(book)=>{
+
+  const addtocart = (book) => {
+    const count = Global.cart.filter((b) => b.title === book.title).length;
+
+    if (count >= 5) {
+      setStockMessage(`${book.title} is out of stock`);
+      setTimeout(() => setStockMessage(""), 2000);
+      return;
+    }
+
     Global.cart.push(book);
-    localStorage.setItem("cart",JSON.stringify(Global.cart));
-    Global.sum+=parseFloat(book.price);
-    console.log(Global.sum);
-    console.log(Global.cart);
-  }
-  function showprofile(){
-    window.location.href="/studentprofile";
-  }
+    localStorage.setItem("cart", JSON.stringify(Global.cart));
+    Global.sum += parseFloat(book.price);
+  };
+
+  const showprofile = () => {
+    window.location.href = "/studentprofile";
+  };
 
   return (
     <>
       <Navbar />
       <button onClick={showprofile}>show my profile</button>
+
+      {stockMessage && (
+  <div className="stock-popup">
+    <div className="stock-card">
+      <h3>Out of Stock</h3>
+      <p>{stockMessage}</p>
+      <button onClick={() => setStockMessage("")}>Close</button>
+    </div>
+  </div>
+)}
+
       <div className="search-container">
         <input
           className="input-field"
@@ -38,9 +59,7 @@ export default function Studentpage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button className="btn" onClick={handleSearch}>
-          Search
-        </button>
+        <button className="btn" onClick={handleSearch}>Search</button>
       </div>
 
       <h3 className="heading">Available Books</h3>
@@ -51,7 +70,7 @@ export default function Studentpage() {
           <p>Author: {bk.author}</p>
           <p>Price: ${bk.price}</p>
           <p>Genre: {bk.genre}</p>
-          <button onClick={addtocart(bk)}>Add to cart</button>
+          <button onClick={() => addtocart(bk)}>Add to cart</button>
         </div>
       ))}
     </>
