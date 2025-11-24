@@ -198,7 +198,7 @@ const addtoCart=async(bk)=>{
         <p>Genre: {bk.genre}</p>
         <button onClick={()=>deleteBook(bk._id)}>delete</button>
         <button onClick={()=>editBook(bk._id)}>edit</button>
-        <button onClick={()=>addtoCart(bk)}>Add to Cart</button>
+        {/* <button onClick={()=>addtoCart(bk)}>Add to Cart</button> */}
       </div>
     ))}
     {confirm && (
