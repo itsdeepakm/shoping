@@ -4,9 +4,7 @@ import { Global } from "./global";
 import "./shopingcart.css";
 
 export default function ShopingCart() {
-  const [cart, setCart] = useState(
-    Global.cart.length ? Global.cart : JSON.parse(localStorage.getItem("cart")) || []
-  );
+  const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [confirm,setconfirm]=useState(false);
   const [currentitem,setcurrentitem]=useState(null);
@@ -15,6 +13,20 @@ export default function ShopingCart() {
     setTotal(sum);
     Global.sum = sum;
   }, [cart]);
+  useEffect(() => {
+    const fetchdata=async()=>{
+    const response=await fetch("http://localhost:3000/api/cart");
+    const data=await response.json();
+    if(!response.ok){
+      throw new Error(data.message ||"Could not fetch cart items");
+    }
+    setCart(data);
+    Global.cart=data;
+  }
+  fetchdata();
+  
+  }, []);
+
 
   const removeFromCart = (index) => {
     setconfirm(true);
