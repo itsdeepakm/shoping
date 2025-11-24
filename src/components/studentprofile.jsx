@@ -7,6 +7,9 @@ export default function Studentprofile() {
   const [success, setSuccess] = useState(false);
   const [showpopup, setshowpopup] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+
 
   useEffect(() => {
     const fetchUserData = async (username) => {
@@ -81,13 +84,7 @@ export default function Studentprofile() {
     setUser((prev) => ({ ...prev, emails: updated }));
   };
 
-  const handleEdit = (value) => {
-    if(value.trim()=== ""){
-      setEditingName(true);
-      return;
-    };
-    setUser((prev) => ({ ...prev, name: value }));
-  };
+
 
   const handleSave = () => {
     setshowpopup(true);
@@ -108,15 +105,46 @@ export default function Studentprofile() {
         <h2>Student Profile</h2>
 
         <div style={{ marginBottom: "15px" }}>
-          <p><strong>Name:</strong>{user.name}</p>
-          <input
-            type="text"
-            value={user.name || ""}
-            onChange={(e) => handleEdit(e.target.value)}
-            placeholder="Edit Name"
-            style={{ width: "250px", padding: "6px" }}
-          />
-        </div>
+  <p><strong>Name:</strong> {user.name}</p>
+
+  <input
+    type="text"
+    value={isEditingName ? nameInput : user.name}
+    disabled={!isEditingName}
+    onChange={(e) => setNameInput(e.target.value)}
+    placeholder="Edit Name"
+    style={{ width: "250px", padding: "6px" }}
+  />
+
+  {!isEditingName && (
+    <button
+      onClick={() => {
+        setIsEditingName(true);
+        setNameInput(user.name);
+      }}
+      style={{ marginLeft: "10px" }}
+    >
+      Edit
+    </button>
+  )}
+
+  {isEditingName && (
+    <button
+      onClick={() => {
+        if (nameInput.trim() === "") {
+          setEditingName(true);
+          return;
+        }
+        setUser((prev) => ({ ...prev, name: nameInput }));
+        setIsEditingName(false);
+      }}
+      style={{ marginLeft: "10px" }}
+    >
+      Save Name
+    </button>
+  )}
+</div>
+          <h3>Username: {user.username}</h3>
 
         <p><strong>Role:</strong> {user.role}</p>
 

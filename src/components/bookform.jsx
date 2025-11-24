@@ -10,45 +10,121 @@ export default function Bookform() {
   });
   const [books, setBooks] = useState([]);
   const [edit,setedit]=useState(null);
+  const [confirm,setconfirm]=useState(false);
+  const [currentitem,setcurrentitem]=useState(null);
   
-  useEffect(()=>{
-    const storedBooks = JSON.parse(localStorage.getItem("books")) || [];
-    setBooks(storedBooks);
-  },[]);
+  useEffect(() => {
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/books");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      setBooks(data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
+
+  fetchBooks();
+}, []);
+
   const handleChange = (e) => {
     setBook({ ...book, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
   e.preventDefault();
-  let updatedBooks = [...books];
-  
-  if (edit !== null) {
-    updatedBooks[edit] = book;
-    setedit(null);
-  } else {
-    updatedBooks.push(book);
+  const response=await fetch("http://localhost:3000/api/books",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(book)
+  });
+  const data=await response.json();
+  if(!response.ok){
+    throw new Error(data.message ||"Could not add book");
   }
-
-  setBooks(updatedBooks);
-  localStorage.setItem("books", JSON.stringify(updatedBooks));
-  setBook({ title: "", author: "", price: "", genre: "" });
+  setBooks([...books,data.book]);
+  console.log(data);
+  setBook({
+    title: "",
+    author: "",
+    genre: "",
+    price: "",
+  });
 };
 
 
 
-  function deleteBook(index){
-    const updatedBooks = books.filter((j, i) => i !== index);
-    setBooks(updatedBooks);
-    localStorage.setItem("books", JSON.stringify(updatedBooks));
+  function deleteBook(id){
+    setconfirm(true);
+    setcurrentitem(id);
   }
-  function editBook(index){
-    const bookToEdit = books[index];
-    setBook(bookToEdit);
-    setedit(index);
-
-  }
+  const handledelete=async(id)=>{
+    const response=await fetch(`http://localhost:3000/api/books/${id}`,{
+      method:"DELETE",
+    });
+    const data=await response.json();
+    if(!response.ok){
+      throw new Error(data.message ||"Could not delete book");
+    }
+    setBooks((prevBooks) => prevBooks.filter((book) => book._id !== id));
+   
     
+    
+  
+  }
+  function editBook(id) {
+  const selectedBook = books.find((b) => b._id === id);
+  setBook(selectedBook);
+  setedit(id);  
+}
+const handleUpdate = async () => {
+  const response = await fetch(`http://localhost:3000/api/books/${edit}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(book),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Could not edit book");
+  }
+
+  
+  setBooks((prevBooks) =>
+    prevBooks.map((b) => (b._id === edit ? data.book : b))
+  );
+
+  
+  setBook({
+    title: "",
+    author: "",
+    genre: "",
+    price: "",
+  });
+
+  setedit(null);
+};
+const addtoCart=async(bk)=>{
+  const response=await fetch("http://localhost:3000/api/cart",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },  
+    body:JSON.stringify(bk)
+  });
+  const data=await response.json();
+  if(!response.ok){
+    throw new Error(data.message ||"Could not add to cart");
+  }
+  console.log(data);
+};
+
 
   return (
     <>
@@ -103,9 +179,14 @@ export default function Bookform() {
           />
         </div>
 
-        <button type="submit" className="submit-btn">
-          Add Book
-        </button>
+        <button
+      type={edit ? "button" : "submit"}
+      className="submit-btn"
+      onClick={edit ? handleUpdate : null}
+       >
+      {edit ? "Update Book" : "Add Book"}
+      </button>
+
       </form>
 
     </div>
@@ -115,10 +196,21 @@ export default function Bookform() {
         <p>Author: {bk.author}</p>
         <p>Price: ${bk.price}</p>
         <p>Genre: {bk.genre}</p>
-        <button onClick={()=>deleteBook(index)}>delete</button>
-        <button onClick={()=>editBook(index)}>edit</button>
+        <button onClick={()=>deleteBook(bk._id)}>delete</button>
+        <button onClick={()=>editBook(bk._id)}>edit</button>
+        <button onClick={()=>addtoCart(bk)}>Add to Cart</button>
       </div>
     ))}
+    {confirm && (
+        <div className="confirmation-popup">
+          <div className="confirmation-card"> 
+            <h3>Item Removed</h3>
+            <p>are you sure want to remove .</p>
+            <button onClick={() => {handledelete(currentitem); setconfirm(false);}}>Yes</button>
+            <button onClick={() => setconfirm(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import "./register.css";
 import { Global } from "./global";
 
@@ -17,15 +16,11 @@ export default function Register() {
   const [success, setSuccess] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState("");
   const [serverError, setServerError] = useState({});
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user") || "[]");
-    setUsers(stored);
-  }, []);
+  const debounceRef = useRef(null);
 
   const validateField = (name, value) => {
     let message = "";
+
     switch (name) {
       case "name":
         if (!value.trim()) message = "Name is required.";
@@ -33,22 +28,6 @@ export default function Register() {
           message = "Name must contain only alphabets.";
         else if (value.length < 3)
           message = "Name must be at least 3 characters.";
-        break;
-
-      case "phone":
-        if (!value.trim()) message = "Phone number is required.";
-        else if (users.some((u) => u.phone === value))
-          message = "Phone number already registered.";
-        else if (!/^[0-9]{10}$/.test(value))
-          message = "Enter a valid 10-digit phone number.";
-        break;
-
-      case "email":
-        if (!value.trim()) message = "Email is required.";
-        else if (users.some((u) => u.email === value))
-          message = "Email already registered.";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-          message = "Enter a valid email address.";
         break;
 
       case "password":
@@ -63,58 +42,63 @@ export default function Register() {
         break;
 
       case "role":
-        if (!value.trim()) message = "Please select a role.";
-        break;
-
-      default:
+        if (!value.trim()) message = "Role is required.";
         break;
     }
 
     setErrors((prev) => ({ ...prev, [name]: message }));
   };
 
-  const handlelogin = () => {
-    window.location.href = "/login";
+  const checkPhoneOrEmailExist = async (field, value) => {
+    if (!value) return;
+
+    try {
+      const res = await fetch("http://localhost:3000/users");
+      const users = await res.json();
+
+      if (field === "phone" && users.some((u) => u.phone === value)) {
+        setErrors((prev) => ({ ...prev, phone: "Phone number already exists." }));
+      }
+
+      if (field === "email" && users.some((u) => u.email === value)) {
+        setErrors((prev) => ({ ...prev, email: "Email already exists." }));
+      }
+    } catch (err) {message:"Error checking existing users."}
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
     validateField(name, value);
-  };
 
-  const validateAll = () => {
-    Object.keys(data).forEach((field) => validateField(field, data[field]));
-    return Object.values(errors).every((err) => err === "");
+    if (name === "phone" || name === "email") {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        checkPhoneOrEmailExist(name, value);
+      }, 400);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setServerError("");
+    setServerError({});
 
-    if (!validateAll()) return;
+    if (Object.values(errors).some((msg) => msg && msg.length > 0)) return;
 
     try {
       const response = await fetch("http://localhost:3000/api/users", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        if (result.errors) {
-          setServerError(result.errors);
-        } else {
-          setServerError({ general: result.message });
-        }
+        setServerError(result.errors || { general: result.message });
         return;
       }
 
-      
       setGeneratedUsername(result.user.username);
       Global.username = result.user.username;
       setData(initialDetails);
@@ -128,8 +112,8 @@ export default function Register() {
   return (
     <div className="registerdiv">
       <h1>Register</h1>
+
       <form onSubmit={handleSubmit} className="register-form">
-        
         <input
           type="text"
           name="name"
@@ -149,7 +133,6 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.phone && <p className="error">{errors.phone}</p>}
-        {serverError.phone && <p className="error">{serverError.phone}</p>}
 
         <input
           type="email"
@@ -160,7 +143,6 @@ export default function Register() {
           onChange={handleInputChange}
         />
         {errors.email && <p className="error">{errors.email}</p>}
-        {serverError.email && <p className="error">{serverError.email}</p>}
 
         <input
           type="password"
@@ -184,18 +166,16 @@ export default function Register() {
         </select>
         {errors.role && <p className="error">{errors.role}</p>}
 
-        <button type="submit" className="register-btn">
-          Register
-        </button>
+        <button type="submit" className="register-btn">Register</button>
 
         {success && (
           <div className="success-card">
             <h3>Registration Successful!</h3>
-            <p>
-              Your username is: <strong>{generatedUsername}</strong>
-            </p>
+            <p>Your username is: <strong>{generatedUsername}</strong></p>
             <p>Please remember this for login.</p>
-            <button onClick={handlelogin}>Login</button>
+            <button onClick={() => (window.location.href = "/login")}>
+              Login
+            </button>
           </div>
         )}
       </form>

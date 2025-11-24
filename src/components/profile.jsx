@@ -149,6 +149,7 @@ export default function Profile() {
           {filteredUsers.map((user, index) => (
             <div className="user-card" key={user.username}>
               <h3>{user.name}</h3>
+              <h3>Username :{user.username}</h3>
               <p>
                 <strong>Role:</strong> {user.role}
               </p>
