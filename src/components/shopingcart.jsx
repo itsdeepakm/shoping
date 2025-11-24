@@ -7,7 +7,8 @@ export default function ShopingCart() {
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [confirm,setconfirm]=useState(false);
-  const [currentitem,setcurrentitem]=useState(null);
+  
+  const [id,setid]=useState(null);
   useEffect(() => {
     const sum = cart.reduce((acc, item) => acc + parseFloat(item.price), 0);
     setTotal(sum);
@@ -21,23 +22,41 @@ export default function ShopingCart() {
       throw new Error(data.message ||"Could not fetch cart items");
     }
     setCart(data);
-    Global.cart=data;
+  
   }
   fetchdata();
   
   }, []);
 
 
-  const removeFromCart = (index) => {
+  const removeFromCart = (id) => {
     setconfirm(true);
-    setcurrentitem(index);
+    setid(id)
     
   };
-  const removeItemConfirmation=(index)=>{
-    const updatedCart = cart.filter((_, i) => i !== index);
-    setCart(updatedCart);
-    Global.cart = updatedCart;
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  const removeItemConfirmation=async(id)=>{
+    const response = await fetch(`http://localhost:3000/api/cart/${id}`, {
+    method: "DELETE",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Could not remove item from cart");
+  }
+
+  
+  if (Array.isArray(data)) {
+    setCart(data);
+  } else {
+  
+    const newCart = await fetch("http://localhost:3000/api/cart");
+    const updatedData = await newCart.json();
+    setCart(updatedData);
+  }
+
+  setconfirm(false);
+
   }
   return (
     <>
@@ -52,7 +71,7 @@ export default function ShopingCart() {
             <p>Author: {item.author}</p>
             <p>Price: ${item.price}</p>
             <p>Genre: {item.genre}</p>
-            <button onClick={() => removeFromCart(index)}>Remove</button>
+            <button onClick={() => removeFromCart(item._id)}>Remove</button>
             <button>Buy Now</button>
           </div>
         ))
@@ -62,7 +81,7 @@ export default function ShopingCart() {
           <div className="confirmation-card"> 
             <h3>Item Removed</h3>
             <p>are you sure want to remove from cart.</p>
-            <button onClick={() => {removeItemConfirmation(currentitem); setconfirm(false);}}>Yes</button>
+            <button onClick={() => {removeItemConfirmation(id); setconfirm(false);}}>Yes</button>
             <button onClick={() => setconfirm(false)}>Close</button>
           </div>
         </div>

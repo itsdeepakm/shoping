@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import "../components/studentpage.css";
 import Navbar from "./navbar";
 import { Global } from "./global";
@@ -7,8 +7,22 @@ export default function Studentpage() {
   const [search, setSearch] = useState("");
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [stockMessage, setStockMessage] = useState("");
+  const [books, setBooks] = useState([]);
 
-  const books = JSON.parse(localStorage.getItem("books")) || [];
+   useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/books");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        setBooks(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+  
+    fetchBooks();
+  }, []);
 
   const handleSearch = () => {
     const filtered = books.filter((bk) =>
@@ -18,19 +32,30 @@ export default function Studentpage() {
     setFilteredBooks(filtered);
   };
 
-  const addtocart = (book) => {
-    const count = Global.cart.filter((b) => b.title === book.title).length;
+const addtoCart=async(bk)=>{
+  const cartRes=await fetch("http://localhost:3000/api/cart");
+  const cartData=await cartRes.json();
+  const count = cartData.filter(item => item.title === bk.title).length;
+  if(count>=5){
+    setStockMessage(`Item "${bk.title}" is out of stock.`);
+    return;
+  }
 
-    if (count >= 5) {
-      setStockMessage(`${book.title} is out of stock`);
-      setTimeout(() => setStockMessage(""), 2000);
-      return;
-    }
+  const response=await fetch("http://localhost:3000/api/cart",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },  
+    body:JSON.stringify(bk)
+  });
+  const data=await response.json();
+  
 
-    Global.cart.push(book);
-    localStorage.setItem("cart", JSON.stringify(Global.cart));
-    Global.sum += parseFloat(book.price);
-  };
+  if(!response.ok){
+    throw new Error(data.message ||"Could not add to cart");
+  }
+  console.log(data);
+};
 
   const showprofile = () => {
     window.location.href = "/studentprofile";
@@ -70,7 +95,7 @@ export default function Studentpage() {
           <p>Author: {bk.author}</p>
           <p>Price: ${bk.price}</p>
           <p>Genre: {bk.genre}</p>
-          <button onClick={() => addtocart(bk)}>Add to cart</button>
+          <button onClick={() => addtoCart(bk)}>Add to cart</button>
         </div>
       ))}
     </>
